@@ -1,9 +1,13 @@
 package app;
 
+import app.GymService;
+import app.MemberHandler;
+import app.SessionHandler;
 import com.sun.net.httpserver.HttpServer;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.concurrent.Executors;
 
 public class Main {
 
@@ -16,9 +20,14 @@ public class Main {
         // Внимание: контекст "/ping" получит и запросы на "/ping/что-угодно".
         server.createContext("/ping", new PingHandler());
 
-        // TODO: зарегистрируйте здесь обработчики своих ресурсов
+        GymService service = new GymService();
+        server.createContext("/members", new MemberHandler(service));
+        server.createContext("/sessions", new SessionHandler(service));
+
+        // Пул потоков: один медленный клиент не блокирует остальных
+        server.setExecutor(Executors.newFixedThreadPool(8));
 
         server.start();
-        System.out.println("Сервер запущен: http://localhost:" + PORT + "/ping");
+        System.out.println("Сервер запущен: http://localhost:" + PORT + "/sessions");
     }
 }
